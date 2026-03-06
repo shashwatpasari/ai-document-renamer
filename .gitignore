@@ -1,0 +1,6 @@
+venv/
+config.py
+__pycache__/
+*.pyc
+.DS_Store
+nohup.out

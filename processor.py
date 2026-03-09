@@ -17,12 +17,14 @@ Return ONLY valid JSON in this exact format, nothing else:
 
 Field rules:
 - type: must be one of: bank statement, credit card statement, payslip, invoice, receipt, tax return, tax assessment, super statement, insurance policy, utility bill, letter, other
-- name: full name of the person/account holder in Title Case (e.g. "Shashwat Pasari"). If multiple names appear, use the primary account holder only.
+- name: full name of the person/account holder in Title Case (e.g. "Jane Doe", "John Smith"). If multiple names appear, use the primary account holder only.
 - org: the issuing organisation. Use the shortest common name. Keep acronyms uppercase (e.g. "ANZ", "ATO", "CBA"). Use Title Case for full names (e.g. "Telstra").
 - month: statement/document period month as a number 1-12. Use the period end date, not the issue date.
 - year: four-digit year of the document period.
 
-Use null for any field that cannot be determined.
+IMPORTANT: Only extract information that is CLEARLY VISIBLE in the document.
+Do NOT guess or make up values. If a field is not clearly present, you MUST return null for that field.
+Do NOT use the examples above as default values.
 """
 
 MONTH_MAP = {
@@ -124,7 +126,7 @@ def ask_qwen_images(image_paths):
     return parse_llm_response(response["message"]["content"])
 
 def get_period(info):
-    # Use extracted year/month. If missing, fallback to current month.
+    # Use extracted year/month. If missing, use "Unknown Date".
     year = info.get("year")
     month = info.get("month")
     if year and month:
@@ -132,8 +134,8 @@ def get_period(info):
             return datetime(year, month, 1).strftime("%B %Y")
         except ValueError:
             pass
-    # Fallback to current month/year if missing or invalid.
-    return datetime.now().strftime("%B %Y")
+    # Don't silently assign to current month — make it obvious.
+    return "Unknown Date"
 
 def get_output_folder(info):
     # Create monthly output folder.

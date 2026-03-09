@@ -9,23 +9,20 @@ import fitz  # PyMuPDF
 import ollama
 import config
 
-# Simple instructions for the AI model.
-PROMPT = """Look at this document and extract:
-1. Document type (bank statement, invoice, payslip, etc.)
-2. Full name of the person this belongs to
-3. Organisation name (bank, company, etc.)
-4. Month and year of the document (March 2025, June 2026)
+# Instructions for the AI model.
+PROMPT = """Analyse this document image and extract metadata.
 
-Formatting rules:
-- Name must be in Title Case (e.g. "Shashwat Pasari", not "SHASHWAT PASARI" or "shashwat pasari")
-- Organisation must use proper casing. Keep acronyms uppercase (e.g. "ANZ", "CBA", "NAB", "ATO"). Use Title Case for full names (e.g. "Commonwealth Bank Of Australia")
-- Document type in lowercase (e.g. "bank statement", "payslip")
+Return ONLY valid JSON in this exact format, nothing else:
+{"type": "...", "name": "...", "org": "...", "month": ..., "year": ...}
 
-Return ONLY valid json, nothing else:
-{"type": "...", "name": "...", "org": "...", "month": "...", "year": "..."}
-Use null if a field is not found.
-Month must be a number from 1 to 12.
-Year must be four digits.
+Field rules:
+- type: must be one of: bank statement, credit card statement, payslip, invoice, receipt, tax return, tax assessment, super statement, insurance policy, utility bill, letter, other
+- name: full name of the person/account holder in Title Case (e.g. "Shashwat Pasari"). If multiple names appear, use the primary account holder only.
+- org: the issuing organisation. Use the shortest common name. Keep acronyms uppercase (e.g. "ANZ", "ATO", "CBA"). Use Title Case for full names (e.g. "Telstra").
+- month: statement/document period month as a number 1-12. Use the period end date, not the issue date.
+- year: four-digit year of the document period.
+
+Use null for any field that cannot be determined.
 """
 
 MONTH_MAP = {
